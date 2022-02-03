@@ -1,2 +1,2 @@
 # atm-interf
-Interferometric atmospheric delay in closed form. 
+Interferometric atmospheric delay and altimetry correction in closed form. 
