@@ -1,4 +1,4 @@
-function [dt, da, dg, Ht, Ha, Hg, N, de] = get_atm_interf_gpt (e, H, pos, date, thin, ver)
+function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_gpt (e, H, pos, date, opt)
 % GET_ATM_INTERF_GPT:  Closed-form interferometric atmospheric delay, using GPT atmospheric model.
 % 
 % SYNTAX:
@@ -18,63 +18,70 @@ function [dt, da, dg, Ht, Ha, Hg, N, de] = get_atm_interf_gpt (e, H, pos, date, 
 %    Hg: [vector] geometric atmospheric altimetry correction (in meters)
 %    N: [vector] layer average refractivity (N=n-1, unitless)
 %    de: [vector] satellite elevation angle bending (in degrees)
+%    der: [vector] rate of change of elevation bending w.r.t. elevation angle (in degrees per degree)
 %
 % OPTIONAL INPUT: 
 %    date: [vector] date (year month day, in this order)
-%    thin: [scalar] assume thin layer? (Boolean)
-%    ver: [scalar] GPT version ('1', '2', '2w')
+%    opt: [struct] options
+%    opt.ver: [scalar] GPT version ('1', '2', '2w')
+%    opt.thin: [scalar, boolean] assume thin layer? defaults to false
+%    opt.* (see get_atm_interf_met.m for other options)
 % 
 % EXAMPLE:
 %    e = 45;  % degrees
 %    H = 10;  % meters
-%    [dt, ~, ~, Ht] = get_atm_interf_pos (e, H)
+%    [dt, ~, ~, Ht] = get_atm_interf_gpt (e, H)
 
     if (nargin < 3),  pos = [];  end
     if (nargin < 4),  date = [];  end
-    if (nargin < 5),  thin = [];  end
-    if (nargin < 6),  ver = [];  end
-    if isempty(thin),  thin = false;  end
-    if isempty(ver),  ver = 1;  end
-
-    if isempty(pos)
-        P = [];  T = [];  s = [];
-    elseif thin
-        [P, T, s] = get_met (pos, date, ver);
-    else
-        [Pa, Ta, sa] = get_met (pos, date, ver);
-        [Ps, Ts, ss] = get_met (pos, date, ver, H);
-        P = exp((log(Pa)+log(Ps))./2);
-        %P = (Pa+Ps)./2;
-        T = (Ta+Ts)./2;
-        s = (sa+ss)./2;
-        thin = false;  % don't redo altitude reduction.
-    end    
+    if (nargin < 5),  opt = [];  end
+    opt_default = struct('ver',1, 'thin',false);
+    opt = structmergenonempty(opt_default, opt);
+    
+    [P, T, s, opt] = get_met (H, pos, date, opt);
 
     if (nargout < 4)
-        [dt, da, dg] = get_atm_interf_met (e, H, P, T, s, [], thin);
+        [dt, da, dg] = get_atm_interf_met (e, H, P, T, s, [], opt);
     else
-        [dt, da, dg, Ht, Ha, Hg] = get_atm_interf_met (e, H, P, T, s, [], thin);
+        [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_met (e, H, P, T, s, [], opt);
     end
 end
 
 %%
-function [P, T, s] = get_met (pos, date, ver, H)
+function [P, T, s, opt] = get_met (H, pos, date, opt)
+    if isempty(pos)
+        P = [];  T = [];  s = [];
+    elseif opt.thin
+        [P, T, s] = get_met_aux (pos, date, opt.ver);
+    else
+        [Pa, Ta, sa] = get_met_aux (pos, date, opt.ver);
+        [Ps, Ts, ss] = get_met_aux (pos, date, opt.ver, H);
+        P = logavg(Pa, Ps);
+        %P = (Pa+Ps)./2;
+        T = (Ta+Ts)./2;
+        s = (sa+ss)./2;
+        opt.thin = false;  % don't redo altitude reduction in get_atm_interf_met
+    end
+end
+
+%%
+function [P, T, s] = get_met_aux (pos, date, ver, H)
     if (nargin < 4),  H = [];  end
 
     if isempty(date)
         temporal = false;
-        date = [2000 01 01];
-        mjd = 51544;
+        mjd = 51544;  % date = [2000 01 01];
     else
         temporal = true;
         date = rowvec(date);
         try
-            jd = mjuliandate(date);
+            mjd = mjuliandate(date);
         catch err
-            if strcmp(err.identifier, 'MATLAB:ErrorRecovery:UnlicensedFunction')
-                jd = mydatemjd (date);
+            if strcmpi(err.identifier, 'MATLAB:UndefinedFunction') ...
+            || strcmpi(err.identifier, 'MATLAB:ErrorRecovery:UnlicensedFunction')              
+                mjd = mydatemjd (date);
             else
-                rethrow(err)
+                rethrow(err);
             end
         end
     end
@@ -85,10 +92,11 @@ function [P, T, s] = get_met (pos, date, ver, H)
     alt = pos(:,3);
     if ~isempty(H),  alt = alt - H;  end
 
-    [P, T, s] = get_met_aux (mjd, lat, lon, alt, ver);
+    [P, T, s] = get_met_aux2 (temporal, mjd, lat, lon, alt, ver);
 end
 
-function [P, T, s] = get_met_aux (mjd, lat, lon, alt, ver)
+%%
+function [P, T, s] = get_met_aux2 (temporal, mjd, lat, lon, alt, ver)
     switch lower(ver)
     case {1,'1','v1'}
         [p, t] = gpt (mjd, deg2rad(lat), deg2rad(lon), alt);  e = 0;
@@ -100,7 +108,7 @@ function [P, T, s] = get_met_aux (mjd, lat, lon, alt, ver)
         error('matlab:get_atm_interf_gpt:badVer', 'Unknown version "%s".', char(ver));
     end
     P = p*100;  % from hPa to pascal
-    T = t - 273.15;  % from Celsius to kelvin
+    T = t + 273.15;  % from Celsius to kelvin
     e = e*100;  % from hPa to pascal
     if (e == 0)
         s = 0;
