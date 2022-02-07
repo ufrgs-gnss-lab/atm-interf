@@ -18,7 +18,7 @@ function [N, N_hydro, N_nonhydro, N_dry, N_wet] = calculate_refractivity (P, T, 
 %      'thayer1974', 'rueguer best average', 'rueguer best available', 'iugg1963', 'bevis1994'
 
     if (nargin < 3) || isempty(s),  s = 0;  end
-    if (nargin < 4),  refractivity_coeff_ref = [];  end
+    if (nargin < 4),  ref = [];  end
     [k_1, k_2, k_3] = get_refractivity_coeff (ref);
     % (References cited below are given at the bottom of this file.)
 
