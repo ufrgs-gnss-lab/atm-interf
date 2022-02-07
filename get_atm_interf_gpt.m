@@ -98,12 +98,18 @@ end
 %%
 function [P, T, s] = get_met_aux2 (temporal, mjd, lat, lon, alt, ver)
     switch lower(ver)
-    case {1,'1','v1'}
+    case {1,'1'}
         [p, t] = gpt (mjd, deg2rad(lat), deg2rad(lon), alt);  e = 0;
-    case {2,'2','v2'}
+    case {2,'2'}
+        file = 'gpt2_5.grd';
+        url = 'https://vmf.geo.tuwien.ac.at/codes/';
+        check_file(file, url);
         [p, t, ~, e] = gpt2 (mjd, deg2rad(lat), deg2rad(lon), alt, temporal);
-    case {'2w','v2w'}
-        [p, t, ~, e] = gpt2_1w (mjd, deg2rad(lat), deg2rad(lon), alt, numel(alt), temporal);
+    case {'2w','2w5'}
+        file = 'gpt2_5w.grd';
+        url = 'https://vmf.geo.tuwien.ac.at/codes/';
+        check_file(file, url);
+        [p, t, ~, e] = gpt2_5w (mjd, deg2rad(lat), deg2rad(lon), alt, numel(alt), temporal);
     otherwise
         error('matlab:get_atm_interf_gpt:badVer', 'Unknown version "%s".', char(ver));
     end
@@ -117,3 +123,10 @@ function [P, T, s] = get_met_aux2 (temporal, mjd, lat, lon, alt, ver)
     end
 end
 
+%%
+function check_file (file, url)
+    if ~exist(file, 'file')
+        error('matlab:get_atm_interf_gpt:noFile', ...
+            'Missing file "%s"; please download from <a href="%s">%s</a>', file, url, url);
+    end
+end

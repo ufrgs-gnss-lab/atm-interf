@@ -1,4 +1,4 @@
-function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it,pgrid,Tgrid,Qgrid,dTgrid,u,Hs,ahgrid,awgrid,lagrid,Tmgrid)
+function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it)
 
 % (c) Department of Geodesy and Geoinformation, Vienna University of
 % Technology, 2013
@@ -16,7 +16,7 @@ function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it,pgr
 % mean temperature of the water vapor, water vapor pressure, hydrostatic 
 % and wet mapping function coefficients ah and aw, water vapour decrease
 % factor and geoid undulation for specific sites near the Earth surface.
-% It is based on a 1 x 1 degree external grid file ('gpt2_1w.grd') with mean
+% It is based on a 1 x 1 degree external grid file ('gpt2_1wA.grd') with mean
 % values as well as sine and cosine amplitudes for the annual and
 % semiannual variation of the coefficients.
 %
@@ -53,7 +53,7 @@ function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it,pgr
 % height dependent Vienna Mapping Function 1 (vmf_ht.f) because the
 % coefficients refer to zero height.
 %
-% Example 1 (Vienna, 2 August 2012, with time variation):
+% Example 1 (Vienna, 2 August 2012, with time variation,grid file 'gpt2_1wA.grd):
 %
 % dmjd = 56141.d0
 % dlat(1) = 48.20d0*pi/180.d0
@@ -63,11 +63,11 @@ function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it,pgr
 % it = 0
 %
 % output:
-% p = 1002.79 hPa
-% T = 22.06 deg Celsius
-% dT = -6.23 deg / km
-% Tm = 281.30 K
-% e = 16.65 hPa
+% p = 1002.788 hPa
+% T = 22.060 deg Celsius
+% dT = -6.230 deg / km
+% Tm = 281.304 K
+% e = 16.742 hPa
 % ah = 0.0012646
 % aw = 0.0005752
 % la = 2.6530
@@ -83,11 +83,11 @@ function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it,pgr
 % it = 1
 %
 % output:
-% p = 1003.71 hPa
+% p = 1003.709 hPa
 % T = 11.79 deg Celsius
 % dT = -5.49 deg / km
 % Tm = 273.22 K
-% e = 10.22 hPa
+% e = 10.26 hPa
 % ah = 0.0012396
 % aw = 0.0005753
 % la = 2.6358
@@ -113,7 +113,8 @@ function [p,T,dT,Tm,e,ah,aw,la,undu] = gpt2_1w (dmjd,dlat,dlon,hell,nstat,it,pgr
 %                 gpt2_1wA.grd (slightly different humidity values) 
 % Johannes Boehm, 25 August 2014, reference changed to Boehm et al. in GPS
 %                 Solutions
-% ---
+% Janina Boisits, 17 October 2020, default input filename changed to gpt2_1w.grd
+%---
 
 % change the reference epoch to January 1 2000
 dmjd1 = dmjd-51544.5;
@@ -140,58 +141,24 @@ end
 
 % read gridfile
 % use the 1 degree grid (GP)
-% fid = fopen('gpt2_1wA.grd','r');
-% 
-% % read first comment line
-% line = fgetl(fid);
-% 
-% % initialization
-% pgrid = zeros([64800, 5]);
-% Tgrid = zeros([64800, 5]);
-% Qgrid = zeros([64800, 5]);
-% dTgrid = zeros([64800, 5]);
-% u = zeros([64800, 1]);
-% Hs = zeros([64800, 1]);
-% ahgrid = zeros([64800, 5]);
-% awgrid = zeros([64800, 5]);
-% lagrid = zeros([64800, 5]);
-% Tmgrid = zeros([64800, 5]);
-% 
-% % initialization of new vectors
-% p =  zeros([nstat, 1]);
-% T =  zeros([nstat, 1]);
-% dT = zeros([nstat, 1]);
-% Tm = zeros([nstat, 1]);
-% e =  zeros([nstat, 1]);
-% ah = zeros([nstat, 1]);
-% aw = zeros([nstat, 1]);
-% la = zeros([nstat, 1]);
-% undu = zeros([nstat, 1]);
-% 
-% % loop over grid points
-% % 64800 for the 1 degree grid (GP)
-% for n = 1:64800
-%     
-%     % read data line
-%     line = fgetl(fid);
-%     vec = sscanf(line,'%f');
-%         
-%     % read mean values and amplitudes
-%     pgrid(n,1:5)  = vec(3:7);          % pressure in Pascal
-%     Tgrid(n,1:5)  = vec(8:12);         % temperature in Kelvin
-%     Qgrid(n,1:5)  = vec(13:17)./1000;  % specific humidity in kg/kg
-%     dTgrid(n,1:5) = vec(18:22)./1000;  % temperature lapse rate in Kelvin/m
-%     u(n)          = vec(23);           % geoid undulation in m
-%     Hs(n)         = vec(24);           % orthometric grid height in m
-%     ahgrid(n,1:5) = vec(25:29)./1000;  % hydrostatic mapping function coefficient, dimensionless
-%     awgrid(n,1:5) = vec(30:34)./1000;  % wet mapping function coefficient, dimensionless
-% 	lagrid(n,1:5) = vec(35:39);    	   % water vapor decrease factor, dimensionless
-% 	Tmgrid(n,1:5) = vec(40:44);    % mean temperature in Kelvin
-%     
-% end
-% fclose (fid);
+fid = fopen('gpt2_1w.grd','r');
 
-% loop over stations
+% read first comment line
+line = fgetl(fid);
+
+% initialization
+pgrid = zeros([64800, 5]);
+Tgrid = zeros([64800, 5]);
+Qgrid = zeros([64800, 5]);
+dTgrid = zeros([64800, 5]);
+u = zeros([64800, 1]);
+Hs = zeros([64800, 1]);
+ahgrid = zeros([64800, 5]);
+awgrid = zeros([64800, 5]);
+lagrid = zeros([64800, 5]);
+Tmgrid = zeros([64800, 5]);
+
+% initialization of new vectors
 p =  zeros([nstat, 1]);
 T =  zeros([nstat, 1]);
 dT = zeros([nstat, 1]);
@@ -202,6 +169,30 @@ aw = zeros([nstat, 1]);
 la = zeros([nstat, 1]);
 undu = zeros([nstat, 1]);
 
+% loop over grid points
+% 64800 for the 1 degree grid (GP)
+for n = 1:64800
+    
+    % read data line
+    line = fgetl(fid);
+    vec = sscanf(line,'%f');
+        
+    % read mean values and amplitudes
+    pgrid(n,1:5)  = vec(3:7);          % pressure in Pascal
+    Tgrid(n,1:5)  = vec(8:12);         % temperature in Kelvin
+    Qgrid(n,1:5)  = vec(13:17)./1000;  % specific humidity in kg/kg
+    dTgrid(n,1:5) = vec(18:22)./1000;  % temperature lapse rate in Kelvin/m
+    u(n)          = vec(23);           % geoid undulation in m
+    Hs(n)         = vec(24);           % orthometric grid height in m
+    ahgrid(n,1:5) = vec(25:29)./1000;  % hydrostatic mapping function coefficient, dimensionless
+    awgrid(n,1:5) = vec(30:34)./1000;  % wet mapping function coefficient, dimensionless
+	lagrid(n,1:5) = vec(35:39);    	   % water vapor decrease factor, dimensionless
+	Tmgrid(n,1:5) = vec(40:44);    % mean temperature in Kelvin
+    
+end
+fclose (fid);
+
+% loop over stations
 for k = 1:nstat
     
     % only positive longitude in degrees
