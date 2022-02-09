@@ -23,14 +23,13 @@ function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_pol (e, H, N_coef
 %    N_coeff: [vector] linear refraction coefficients (see get_atm_pol.m for details)
 %    de_coeff: [vector] angular refraction coefficients (see get_atm_pol.m for details)
 %    h: [vector] antenna ellipsoidal height or altitude above ellipsoid (in meters)
-%    opt: [struct] options (see get_atm_interf_gen.m for details)
+%    opt: [struct] closed formula options
+%    opt.* (see get_atm_interf_gen.m for other options)
 % 
 % EXAMPLE:
 %    e = 45;  % degrees
 %    H = 10;  % meters
 %    [dt, ~, ~, Ht] = get_atm_interf_pol (e, H)
-
-% TODO: support time-space coefficient models.
 
     if (nargin < 3),  N_coeff = [];  end
     if (nargin < 4),  de_coeff = [];  end

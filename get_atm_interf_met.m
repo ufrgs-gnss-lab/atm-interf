@@ -24,7 +24,7 @@ function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_met (e, H, P, T, 
 % OPTIONAL INPUT: 
 %    s: [scalar] specific humidity at the antenna (in kg/kg)
 %    r: [scalar] temperature lapse rate (in kelvin per meter, K/m)
-%    opt: [struct] options
+%    opt: [struct] closed formula options
 %    opt.thin: [scalar, boolean] assume thin layer? defaults to false
 %    opt.bennet: [struct] see get_bending_bennet.m
 %    opt.* (see get_atm_interf_gen.m for other options)

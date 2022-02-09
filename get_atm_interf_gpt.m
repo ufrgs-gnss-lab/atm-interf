@@ -2,12 +2,11 @@ function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_gpt (e, H, pos, d
 % GET_ATM_INTERF_GPT:  Closed-form interferometric atmospheric delay, using GPT atmospheric model.
 % 
 % SYNTAX:
-%    [dt, da, dg, Ht, Ha, Hg, N, de] = get_atm_interf_gpt (e, H, pos, date);
+%    [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_gpt (e, H, pos, date);
 %
 % INPUT: 
 %    e: [vector] satellite elevation angle (in degrees)
 %    H: [vector] reflector depth or antenna height above reflector (in meters)
-%    pos: [vector] position, in geodetic coordinates (latitude, longitude, altitude; in degrees, degrees, meters)
 %
 % OUTPUT: 
 %    dt: [vector] total delay (in meters)
@@ -21,9 +20,10 @@ function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_gpt (e, H, pos, d
 %    der: [vector] rate of change of elevation bending w.r.t. elevation angle (in degrees per degree)
 %
 % OPTIONAL INPUT: 
+%    pos: [vector] position, in geodetic coordinates (latitude, longitude, altitude; in degrees, degrees, meters)
 %    date: [vector] date (year month day, in this order)
-%    opt: [struct] options
-%    opt.ver: [scalar] GPT version ('1', '2', '2w')
+%    opt: [struct] closed formula options
+%    opt.ver: [char or scalar] GPT version ('1' or 1, '2' or 1, '2w')
 %    opt.thin: [scalar, boolean] assume thin layer? defaults to false
 %    opt.* (see get_atm_interf_met.m for other options)
 % 
@@ -68,6 +68,13 @@ end
 function [P, T, s] = get_met_aux (pos, date, ver, H)
     if (nargin < 4),  H = [];  end
 
+    if isempty(pos),  pos = [0 0 0];  end
+    pos = rowvec(pos);
+    lat = pos(:,1);
+    lon = pos(:,2);
+    alt = pos(:,3);
+    if ~isempty(H),  alt = alt - H;  end
+    
     if isempty(date)
         temporal = false;
         mjd = 51544;  % date = [2000 01 01];
@@ -85,12 +92,6 @@ function [P, T, s] = get_met_aux (pos, date, ver, H)
             end
         end
     end
-
-    pos = rowvec(pos);
-    lat = pos(:,1);
-    lon = pos(:,2);
-    alt = pos(:,3);
-    if ~isempty(H),  alt = alt - H;  end
 
     [P, T, s] = get_met_aux2 (temporal, mjd, lat, lon, alt, ver);
 end
