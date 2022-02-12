@@ -65,10 +65,10 @@ function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_gen (e, H, N, de,
     
     if opt.H_approximate
         tmp = deg2rad(de).*tand(e);
-        Ha = H.*N.*cscd(e+de).^2.*(1-tmp);
+        Ha = H.*N.*cscd(e+de).^2.*(1-tmp).*(1+der);
         Hg = -H.*der + H.*tmp;
     else
-        Ha = H.*N.*cscd(e+de).^2.*(1+der).*cosd(e+de)./cosd(e);
+        Ha = H.*N.*cscd(e+de).^2.*cosd(e+de)./cosd(e).*(1+der);
         Hg = -H.*der + H.*(sind(de).*tand(e)+1-cosd(de)).*(1+der);
     end
     Ht = Ha + Hg;
