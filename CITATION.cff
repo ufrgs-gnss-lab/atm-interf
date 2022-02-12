@@ -1,0 +1,16 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: atm-interf
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - given-names: Felipe
+    family-names: Geremia-Nievinski
+    affiliation: Federal University RGS
+    orcid: 'https://orcid.org/0000-0002-3325-1987'
+  - given-names: Thalia
+    family-names: Nikolaidou
+    orcid: 'https://orcid.org/0000-0003-1817-6015'
+    affiliation: University of New Brunswick
