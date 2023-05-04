@@ -40,9 +40,23 @@ function [dt, da, dg, Ht, Ha, Hg, N, de, der] = get_atm_interf_gen (e, H, N, de,
     if (nargin < 6),  opt = struct();  end
     opt = structmergenonempty(get_opt_default(), opt);
 
-    da = 2*H*N./sind(e+de);
-    dg = 2*H.*(sind(e+de)-sind(e));
-    dt = da + dg;
+    %% auxiliary quantities:
+    ep = e + de;
+    sine  = sind(e);
+    sinep = sind(ep);
+    Dl  = 2*H./sine; %#ok<NASGU>
+    Dlp = 2*H./sinep;
+    Di  = 2*H.*sine;
+    Dip = 2*H.*sinep;
+    dDi = Dip - Di;
+
+    %% propagation delays:
+    da = N.*Dlp;
+    dg = dDi + N.*(Dip-Dlp);
+    dt = (1+N).*Dip - Di;
+      %dt_alt = da + dg;
+      %tmp = max(abs(dt-dt_alt))
+      %tmp < sqrt(eps(max(dt)))  % DEBUG
 
     if (nargout < 4),  return;  end
     
